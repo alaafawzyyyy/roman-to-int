@@ -1,7 +1,33 @@
 import express from 'express'
+import mongoose from 'mongoose';
 
 const app = express();
 app.use(express.json());
+
+mongoose.connect('mongodb://127.0.0.1:27017/usersdb')
+ .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
+const convertionSchema=new mongoose.Schema({
+
+roman:{
+type:String,
+required:true,
+},
+
+integer:{
+  type:Number,
+  required:true
+},
+
+createdAt:{
+  type:Date,
+  default:Date.now
+}
+});
+
+const Conversion =  mongoose.model('conversion',convertionSchema);
+
 
 const romanValues = {
   I: 1,
@@ -37,7 +63,7 @@ const romanValues = {
 }
 
 // POST /convert
-app.post('/convert', (req, res) => {
+app.post('/convert', async(req, res) => {
   const { roman } = req.body;
 
   if (!roman || typeof roman !== 'string') {
@@ -55,9 +81,18 @@ app.post('/convert', (req, res) => {
     }
 
   const result = romanToInt(upperRoman);
+  const conversionSaved = await Conversion.create({roman : upperRoman, integer:result})
+
 
   res.status(200).json({ integer: result });
+
 });
+
+//Get /convert
+app.get('/conversions',async(req,res)=>{
+const conversions = await Conversion.find().sort({createdAt : -1})
+res.json(conversions)
+})
 
 app.listen(3000, () => {
   console.log('app listening on port 3000!');
