@@ -86,17 +86,34 @@ app.post('/convert', async(req, res) => {
   }
 
   const result = romanToInt(upperRoman);
-  const conversionSaved = await Conversion.create({roman : upperRoman, integer:result})
+  const conversionSaved = await Conversion.create({roman : upperRoman, integer:result ,  id: Conversion._id,})
 
 
   res.status(200).json({ integer: result });
 
 });
 
-//Get /convert
+//Get /conversions
 app.get('/conversions',async(req,res)=>{
 const conversions = await Conversion.find().sort({createdAt : -1})
 res.json(conversions)
+})
+
+//Get /conversions/:id
+app.get('/conversions/:id',async (req,res)=>{
+  const {id} = req.params;
+
+if(!id.match(/^[0-9a-fA-F]{24}$/)){
+  return res.status(400).json({ error: 'Invalid ID format' });
+}
+
+const findconversion = await Conversion.findById(id)
+if(!findconversion){
+  return res.status(404).json({error :"Conversion not found"})
+}
+
+res.status(200).json(findconversion)
+
 })
 
 app.listen(3000, () => {
