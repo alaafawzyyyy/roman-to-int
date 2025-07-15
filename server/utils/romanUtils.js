@@ -30,8 +30,8 @@ const romanValues = {
 
 export function validateRomanInput(roman) {
 
-  if (!roman || typeof roman !== 'string') {
-    return { error: 'Input must be a string' };
+  if (!roman) {
+    return { error: 'Please enter a Roman numeral' };
   }
 
   const upperRoman = roman.toUpperCase();
