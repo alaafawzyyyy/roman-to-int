@@ -151,6 +151,23 @@ const { roman } = req.body;
   res.status(200).json(updated);
 })
 
+
+app.delete('/conversions/:id',async(req,res)=>{
+const {id}=req.params;
+
+   if(!id.match(/^[0-9a-fA-F]{24}$/)){
+    return res.status(400).json({ error: 'Invalid ID format' });
+}
+
+const deleteConversion = await Conversion.findByIdAndDelete(id)
+
+if(!deleteConversion ){
+  return res.status(400).json({ error: 'Conversion not found' });
+}
+res.status(200).json({ message: 'Conversion deleted successfully' });
+})
+
+
 app.listen(3000, () => {
   console.log('app listening on port 3000!');
 });
