@@ -62,42 +62,47 @@ const romanValues = {
   return total;
 }
 
+//roman validation function
+
+function validateRomanInput(roman) {
+
+  if (!roman || typeof roman !== 'string') {
+    return { error: 'Input must be a string' };
+  }
+
+  const upperRoman = roman.toUpperCase();
+  const validRomanRegex = /^(M{0,3})(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+
+  if (!validRomanRegex.test(upperRoman)) {
+    return { error: 'Invalid Roman numeral format' };
+  }
+
+  return { value: upperRoman };
+}
+
 // POST /convert
 app.post('/convert', async(req, res) => {
   const { roman } = req.body;
 
-  if (!roman || typeof roman !== 'string') {
-    return res.status(400).json({ error: 'Input must be a string' });
-  }
-
-  const upperRoman = roman.toUpperCase();
-
-  const validChars = ['I', 'V', 'X', 'L', 'C', 'D', 'M'];
-
-    for (let char of upperRoman) {
-    if (!validChars.includes(char)) {
-        return res.status(400).json({ error: 'Invalid Roman numeral character' });
-    }
-    }
-
-     const validRomanRegex = /^(M{0,3})(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
-  if (!validRomanRegex.test(upperRoman)) {
-    return res.status(400).json({ error: 'Invalid Roman numeral format' });
-  }
+     const { error, value: upperRoman } = validateRomanInput(roman);
+      if (error) return res.status(400).json( {error} );
 
   const result = romanToInt(upperRoman);
-  const conversionSaved = await Conversion.create({roman : upperRoman, integer:result ,  id: Conversion._id,})
+
+  const conversionSaved = await Conversion.create({roman : upperRoman, integer:result})
 
 
   res.status(200).json({ integer: result });
 
 });
 
+
 //Get /conversions
 app.get('/conversions',async(req,res)=>{
 const conversions = await Conversion.find().sort({createdAt : -1})
 res.json(conversions)
 })
+
 
 //Get /conversions/:id
 app.get('/conversions/:id',async (req,res)=>{
@@ -114,6 +119,36 @@ if(!findconversion){
 
 res.status(200).json(findconversion)
 
+})
+
+
+//Put /conversions/:id
+app.put('/conversions/:id',async (req,res)=>{
+const {id}=req.params;
+const { roman } = req.body;
+
+   if(!id.match(/^[0-9a-fA-F]{24}$/)){
+    return res.status(400).json({ error: 'Invalid ID format' });
+}
+
+     const { error, value: upperRoman } = validateRomanInput(roman);
+      if (error) return res.status(400).json( {error} );{
+}
+
+  const integer = romanToInt(upperRoman);
+
+  const updated = await Conversion.findByIdAndUpdate(
+    id,
+    { roman: upperRoman, integer },
+    { new: true }
+  );
+
+
+  if (!updated) {
+    return res.status(404).json({ error: 'Conversion not found' });
+  }
+
+  res.status(200).json(updated);
 })
 
 app.listen(3000, () => {
